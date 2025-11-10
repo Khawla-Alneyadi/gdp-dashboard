@@ -1,151 +1,153 @@
 import streamlit as st
-import pandas as pd
-import math
-from pathlib import Path
+import time
+from datetime import datetime
 
-# Set the title and favicon that appear in the Browser's tab bar.
+# ----- PAGE CONFIG -----
 st.set_page_config(
-    page_title='GDP dashboard',
-    page_icon=':earth_americas:', # This is an emoji shortcode. Could be a URL too.
+    page_title="Climate Analysis Dashboard",
+    page_icon="🌍",
+    layout="wide",
+    initial_sidebar_state="expanded",
 )
 
-# -----------------------------------------------------------------------------
-# Declare some useful functions.
+# ----- GLOBAL STYLE -----
+st.markdown("""
+    <style>
+    body {
+        background-color: #0e1117;
+        color: #fafafa;
+    }
+    .main {
+        background-color: #0e1117;
+        color: white;
+    }
+    .stButton>button {
+        background-color: #1E88E5;
+        color: white;
+        border-radius: 8px;
+        height: 40px;
+        width: 180px;
+        border: none;
+        font-weight: 500;
+    }
+    .stButton>button:hover {
+        background-color: #1565C0;
+        color: #fff;
+    }
+    .metric-card {
+        background-color: #1b1f2a;
+        padding: 15px;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-@st.cache_data
-def get_gdp_data():
-    """Grab GDP data from a CSV file.
+# ----- NAVIGATION -----
+page = st.sidebar.radio(
+    "Navigation",
+    ["🏠 Home Dashboard", "🎥 Video Time-lapse", "📊 Change Detection"],
+)
 
-    This uses caching to avoid having to read the file every time. If we were
-    reading from an HTTP endpoint instead of a file, it's a good idea to set
-    a maximum age to the cache with the TTL argument: @st.cache_data(ttl='1d')
-    """
-
-    # Instead of a CSV on disk, you could read from an HTTP endpoint here too.
-    DATA_FILENAME = Path(__file__).parent/'data/gdp_data.csv'
-    raw_gdp_df = pd.read_csv(DATA_FILENAME)
-
-    MIN_YEAR = 1960
-    MAX_YEAR = 2022
-
-    # The data above has columns like:
-    # - Country Name
-    # - Country Code
-    # - [Stuff I don't care about]
-    # - GDP for 1960
-    # - GDP for 1961
-    # - GDP for 1962
-    # - ...
-    # - GDP for 2022
-    #
-    # ...but I want this instead:
-    # - Country Name
-    # - Country Code
-    # - Year
-    # - GDP
-    #
-    # So let's pivot all those year-columns into two: Year and GDP
-    gdp_df = raw_gdp_df.melt(
-        ['Country Code'],
-        [str(x) for x in range(MIN_YEAR, MAX_YEAR + 1)],
-        'Year',
-        'GDP',
-    )
-
-    # Convert years from string to integers
-    gdp_df['Year'] = pd.to_numeric(gdp_df['Year'])
-
-    return gdp_df
-
-gdp_df = get_gdp_data()
-
-# -----------------------------------------------------------------------------
-# Draw the actual page
-
-# Set the title that appears at the top of the page.
-'''
-# :earth_americas: GDP dashboard
-
-Browse GDP data from the [World Bank Open Data](https://data.worldbank.org/) website. As you'll
-notice, the data only goes to 2022 right now, and datapoints for certain years are often missing.
-But it's otherwise a great (and did I mention _free_?) source of data.
-'''
-
-# Add some spacing
-''
-''
-
-min_value = gdp_df['Year'].min()
-max_value = gdp_df['Year'].max()
-
-from_year, to_year = st.slider(
-    'Which years are you interested in?',
-    min_value=min_value,
-    max_value=max_value,
-    value=[min_value, max_value])
-
-countries = gdp_df['Country Code'].unique()
-
-if not len(countries):
-    st.warning("Select at least one country")
-
-selected_countries = st.multiselect(
-    'Which countries would you like to view?',
-    countries,
-    ['DEU', 'FRA', 'GBR', 'BRA', 'MEX', 'JPN'])
-
-''
-''
-''
-
-# Filter the data
-filtered_gdp_df = gdp_df[
-    (gdp_df['Country Code'].isin(selected_countries))
-    & (gdp_df['Year'] <= to_year)
-    & (from_year <= gdp_df['Year'])
+# ----- SIDEBAR FILTERS -----
+st.sidebar.header("Data Layers")
+layers = [
+    "Mountains", "Forest", "Vegetation", "Flood", "Desert",
+    "Urban", "Sea", "Temperature", "Soil Moisture", "Water"
 ]
+selected_layers = [layer for layer in layers if st.sidebar.checkbox(layer, value=True)]
 
-st.header('GDP over time', divider='gray')
+# ----- PAGE 1: HOME -----
+if page == "🏠 Home Dashboard":
+    st.title("🌍 Climate & Environmental Monitoring Dashboard")
+    st.markdown("### Explore satellite-based environmental data and historical imagery")
 
-''
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.image("https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74418/world.topo.bathy.200412.3x5400x2700.jpg",
+                 caption="Global Earth Visualization", use_container_width=True)
+    with col2:
+        st.markdown("#### Quick Controls")
+        st.slider("Zoom Level (%)", 50, 150, 100)
+        year = st.slider("Select Year", 2000, 2025, 2012)
+        st.markdown(f"**Selected Year:** {year}")
 
-st.line_chart(
-    filtered_gdp_df,
-    x='Year',
-    y='GDP',
-    color='Country Code',
-)
+        st.write("**Navigate to:**")
+        video_btn = st.button("🎞️ Video Mode")
+        change_btn = st.button("📊 Change Detection")
 
-''
-''
+        if video_btn:
+            st.session_state.page = "🎥 Video Time-lapse"
+            st.experimental_rerun()
+        if change_btn:
+            st.session_state.page = "📊 Change Detection"
+            st.experimental_rerun()
 
+    st.markdown("---")
+    st.markdown("**Selected Layers:** " + ", ".join(selected_layers))
+    st.markdown("Historical imagery timeline below:")
+    st.slider("Timeline", 2000, 2025, 2012, step=1)
 
-first_year = gdp_df[gdp_df['Year'] == from_year]
-last_year = gdp_df[gdp_df['Year'] == to_year]
+# ----- PAGE 2: VIDEO MODE -----
+elif page == "🎥 Video Time-lapse":
+    st.title("🎥 Video Time-Lapse Mode")
+    st.markdown("Watch environmental changes over time through animated satellite imagery.")
 
-st.header(f'GDP in {to_year}', divider='gray')
+    st.markdown("#### Configuration")
+    col1, col2 = st.columns(2)
+    with col1:
+        start_date = st.date_input("Start Date", datetime(2020, 1, 1))
+    with col2:
+        end_date = st.date_input("End Date", datetime(2030, 12, 31))
 
-''
+    speed = st.radio("Playback Speed", ["0.5x", "1x", "2x", "4x"], index=1)
+    st.markdown(f"**Speed Selected:** {speed}")
 
-cols = st.columns(4)
+    st.image("https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74418/world.topo.bathy.200412.3x5400x2700.jpg",
+             caption="Animated time-lapse (example)", use_container_width=True)
+    st.progress(0)
+    progress_bar = st.progress(0)
+    play = st.button("▶️ Play")
 
-for i, country in enumerate(selected_countries):
-    col = cols[i % len(cols)]
+    if play:
+        for i in range(101):
+            time.sleep(0.02)
+            progress_bar.progress(i)
+        st.success("Playback Complete ✅")
 
-    with col:
-        first_gdp = first_year[first_year['Country Code'] == country]['GDP'].iat[0] / 1000000000
-        last_gdp = last_year[last_year['Country Code'] == country]['GDP'].iat[0] / 1000000000
+    st.markdown("⬅️ [Back to Dashboard](#)")
 
-        if math.isnan(first_gdp):
-            growth = 'n/a'
-            delta_color = 'off'
-        else:
-            growth = f'{last_gdp / first_gdp:,.2f}x'
-            delta_color = 'normal'
+# ----- PAGE 3: CHANGE DETECTION -----
+elif page == "📊 Change Detection":
+    st.title("📊 Environmental Change Detection Analysis")
+    st.markdown("Compare two time periods to detect environmental changes and generate an analysis summary.")
 
-        st.metric(
-            label=f'{country} GDP',
-            value=f'{last_gdp:,.0f}B',
-            delta=growth,
-            delta_color=delta_color
-        )
+    col1, col2 = st.columns(2)
+    with col1:
+        st.image("https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74418/world.topo.bathy.200412.3x5400x2700.jpg",
+                 caption="Before (2020)", use_container_width=True)
+    with col2:
+        st.image("https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57730/world.topo.bathy.200412.3x5400x2700.jpg",
+                 caption="After (2024)", use_container_width=True)
+
+    st.markdown("### 🔍 Change Analysis Summary")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Overall Change", "12.8%", "Significant increase detected")
+    col2.metric("Time Span", "5 years")
+    col3.metric("Primary Change", "Vegetation +4.2%")
+
+    st.markdown("#### Detailed Analysis")
+    st.markdown("""
+        <div class="metric-card">
+            <b>Forest Cover:</b> -12.3%<br>
+            <b>Urban Expansion:</b> +8.7%<br>
+            <b>Water Bodies:</b> -3.2%<br>
+            <b>Temperature:</b> +1.6°C<br>
+            <b>Vegetation Density:</b> -7.8%<br>
+            <b>Desert Areas:</b> +5.4%
+        </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("⬅️ [Back to Dashboard](#)")
+
