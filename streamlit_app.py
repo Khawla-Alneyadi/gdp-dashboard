@@ -66,7 +66,7 @@ def set_background(image_path):
     }}
     p {{
         font-size: 1.2rem;
-        color: #eaeaea;
+        color: #111;
         max-width: 800px;
         line-height: 1.6;
         margin-bottom: 2rem;
