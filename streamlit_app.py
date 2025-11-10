@@ -1,7 +1,6 @@
 import streamlit as st
 from datetime import datetime
 import base64
-import time
 
 # ---- PAGE CONFIG ----
 st.set_page_config(page_title="Climate Analysis", layout="wide")
@@ -28,7 +27,7 @@ def set_bg(image_file):
         max-width: 100% !important;
     }}
     .hero {{
-        height: 100vh;
+        min-height: 90vh;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -36,6 +35,7 @@ def set_bg(image_file):
         text-align: center;
         background: rgba(0, 0, 0, 0.55);
         backdrop-filter: blur(5px);
+        padding: 2rem;
     }}
     h1 {{
         font-size: 3.5rem;
@@ -46,6 +46,7 @@ def set_bg(image_file):
         font-size: 1.1rem;
         max-width: 800px;
         color: #eaeaea;
+        margin-bottom: 1rem;
     }}
     .navbar {{
         position: fixed;
@@ -118,11 +119,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 st.markdown("<br><br><br>", unsafe_allow_html=True)
 
-# ---- URL NAVIGATION HANDLING ----
+# ---- GET PAGE PARAMETER ----
 query_params = st.experimental_get_query_params()
 page = query_params.get("page", ["home"])[0]
 
-# ---- HOME ----
+# ---- HOME PAGE ----
 if page == "home":
     st.markdown("<div class='hero'>", unsafe_allow_html=True)
     st.markdown("<h1>Climate Analysis Dashboard</h1>", unsafe_allow_html=True)
@@ -133,7 +134,7 @@ if page == "home":
 
     with col1:
         st.markdown("<div class='side-panel'>", unsafe_allow_html=True)
-        st.markdown("<h3>🌍 Data Layers</h3>", unsafe_allow_html=True)
+        st.markdown("<h3>🌍 Environmental Layers</h3>", unsafe_allow_html=True)
         layers = [
             "Mountains", "Forest", "Vegetation", "Flood", "Desert",
             "Urban", "Sea", "Temperature", "Soil Moisture", "Water"
@@ -150,10 +151,13 @@ if page == "home":
         st.markdown("</div>", unsafe_allow_html=True)
 
     with col2:
-        st.image("https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74418/world.topo.bathy.200412.3x5400x2700.jpg",
-                 caption=f"Satellite Imagery for {year}", use_container_width=True)
+        st.image(
+            "https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74418/world.topo.bathy.200412.3x5400x2700.jpg",
+            caption=f"Satellite Imagery View – {year}",
+            use_container_width=True
+        )
 
-# ---- EXPLORE DATA ----
+# ---- EXPLORE DATA PAGE ----
 elif page == "explore":
     st.markdown("<div class='hero'>", unsafe_allow_html=True)
     st.markdown("<h1>Explore Data</h1>", unsafe_allow_html=True)
@@ -163,9 +167,10 @@ elif page == "explore":
     st.slider("Playback Speed (x)", 0.5, 4.0, 1.0, step=0.5)
     st.date_input("Start Date", datetime(2018, 1, 1))
     st.date_input("End Date", datetime(2024, 12, 31))
-    st.image("https://earthengine.google.com/static/images/ee-logo.png", caption="Time-lapse Simulation", use_container_width=True)
+    st.image("https://earthengine.google.com/static/images/ee-logo.png",
+             caption="Time-lapse Simulation", use_container_width=True)
 
-# ---- CHANGE DETECTION ----
+# ---- CHANGE DETECTION PAGE ----
 elif page == "change":
     st.markdown("<div class='hero'>", unsafe_allow_html=True)
     st.markdown("<h1>Change Detection</h1>", unsafe_allow_html=True)
@@ -178,7 +183,7 @@ elif page == "change":
     with after:
         st.image("https://i.imgur.com/bd2XoDd.png", caption="After (2024)", use_container_width=True)
 
-    st.markdown("**Change Summary:**")
+    st.markdown("### Change Summary")
     st.write("""
     - Forest Cover: −12.3 %  
     - Urban Expansion: +8.7 %  
@@ -187,7 +192,7 @@ elif page == "change":
     - Temperature Increase: +1.6 °C  
     """)
 
-# ---- ABOUT ----
+# ---- ABOUT PAGE ----
 elif page == "about":
     st.markdown("<div class='hero'>", unsafe_allow_html=True)
     st.markdown("<h1>About Climate Analysis</h1>", unsafe_allow_html=True)
