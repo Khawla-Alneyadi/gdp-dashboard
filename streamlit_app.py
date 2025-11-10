@@ -1,30 +1,31 @@
 import streamlit as st
 from datetime import datetime
-import time
 import base64
+import time
 
 # ---- PAGE CONFIG ----
-st.set_page_config(
-    page_title="Dynamic Climate Vision",
-    page_icon="🌍",
-    layout="wide",
-)
+st.set_page_config(page_title="Dynamic Climate Vision", page_icon="🌍", layout="wide")
 
-# ---- LOAD BACKGROUND ----
+# ---- BACKGROUND IMAGE ----
 def set_bg(image_file):
     with open(image_file, "rb") as f:
         data = f.read()
     encoded = base64.b64encode(data).decode()
-    page_bg = f"""
+    bg_css = f"""
     <style>
     body {{
-        background-image: url("data:image/png;base64,{encoded}");
+        background-image: url("data:image/webp;base64,{encoded}");
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
         background-repeat: no-repeat;
-        color: white;
         font-family: 'Inter', sans-serif;
+        color: white;
+    }}
+    .block-container {{
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
     }}
     .hero {{
         height: 100vh;
@@ -32,26 +33,24 @@ def set_bg(image_file):
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        background: rgba(0,0,0,0.55);
         text-align: center;
-        padding: 2rem;
-        border-radius: 0;
+        background: rgba(0, 0, 0, 0.55);
+        backdrop-filter: blur(4px);
     }}
     h1 {{
         font-size: 3.5rem;
         font-weight: 700;
         margin-bottom: 1rem;
-        text-shadow: 0 0 20px rgba(0,0,0,0.6);
+        text-shadow: 0 0 25px rgba(0,0,0,0.7);
     }}
     p {{
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         max-width: 800px;
         color: #eaeaea;
         margin-bottom: 2rem;
-        line-height: 1.6;
     }}
-    .btn-row button {{
-        background: #0288d1;
+    .btn {{
+        background-color: #0288d1;
         color: white;
         border: none;
         border-radius: 8px;
@@ -62,8 +61,8 @@ def set_bg(image_file):
         cursor: pointer;
         transition: 0.3s;
     }}
-    .btn-row button:hover {{
-        background: #039be5;
+    .btn:hover {{
+        background-color: #039be5;
     }}
     .navbar {{
         position: fixed;
@@ -74,7 +73,7 @@ def set_bg(image_file):
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 0.7rem 2rem;
+        padding: 0.8rem 2rem;
         z-index: 100;
     }}
     .navbar a {{
@@ -88,14 +87,14 @@ def set_bg(image_file):
     }}
     </style>
     """
-    st.markdown(page_bg, unsafe_allow_html=True)
+    st.markdown(bg_css, unsafe_allow_html=True)
 
-set_bg("land_image.webp")   # <-- make sure this file is in same directory
+set_bg("land_image.webp")
 
 # ---- NAVBAR ----
 st.markdown("""
 <div class="navbar">
-  <div><b>🌍 Climate Vision</b></div>
+  <div><b>🌍 Dynamic Climate Vision</b></div>
   <div>
     <a href="#home">Home</a>
     <a href="#explore">Explore Data</a>
@@ -104,59 +103,63 @@ st.markdown("""
   </div>
 </div>
 """, unsafe_allow_html=True)
-st.markdown("<br><br><br>", unsafe_allow_html=True)
 
-# ---- PAGE SELECTOR ----
-page = st.sidebar.radio("", ["Home", "Explore Data", "Change Detection", "About"], index=0)
+# ---- SIDEBAR HIDE ----
+st.markdown(
+    """
+    <style>
+    [data-testid="stSidebar"] {display: none;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# ---- PAGE NAVIGATION ----
+page = st.session_state.get("page", "Home")
+
+menu = ["Home", "Explore Data", "Change Detection", "About"]
+choice = st.selectbox("", menu, index=menu.index(page), key="menu")
 
 # ---- HOME ----
-if page == "Home":
+if choice == "Home":
     st.markdown("""
     <div class="hero" id="home">
-      <h1>Dynamic Climate Vision</h1>
-      <p>
-        A modern AI-powered platform for exploring environmental change through
-        high-resolution satellite imagery. Inspired by Google's Dynamic World.
-      </p>
-      <div class="btn-row">
-        <button onclick="window.location.href='#explore'">Explore the Data</button>
-        <button onclick="window.location.href='#change'">Discover Change</button>
-      </div>
+        <h1>Dynamic Climate Vision</h1>
+        <p>A modern AI-powered platform for exploring environmental change through
+        high-resolution satellite imagery — inspired by Google’s Dynamic World.</p>
+        <div>
+            <a href="#explore"><button class="btn">Explore the Data</button></a>
+            <a href="#change"><button class="btn">Discover Change</button></a>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
 # ---- EXPLORE DATA ----
-elif page == "Explore Data":
+elif choice == "Explore Data":
     st.markdown("""
     <div class="hero" id="explore">
-      <h1>Explore Data</h1>
-      <p>
-        Visualize environmental dynamics over time with satellite-based time-lapse imagery.
-        Adjust speed, date range, and discover how landscapes transform.
-      </p>
-      <div class="btn-row">
-        <button>▶️ Play Time-lapse</button>
-      </div>
+        <h1>Explore Data</h1>
+        <p>Visualize environmental transformations across time using satellite-based
+        time-lapse imagery. Adjust your timeline and speed to uncover Earth’s evolving patterns.</p>
+        <div><button class="btn">▶️ Play Time-lapse</button></div>
     </div>
     """, unsafe_allow_html=True)
+
     st.slider("Playback Speed (x)", 0.5, 4.0, 1.0, step=0.5)
-    st.date_input("Start Date", datetime(2018,1,1))
-    st.date_input("End Date", datetime(2024,12,31))
+    st.date_input("Start Date", datetime(2018, 1, 1))
+    st.date_input("End Date", datetime(2024, 12, 31))
     st.image("https://earthengine.google.com/static/images/ee-logo.png",
              caption="Satellite Time-lapse Placeholder", use_container_width=True)
 
 # ---- CHANGE DETECTION ----
-elif page == "Change Detection":
+elif choice == "Change Detection":
     st.markdown("""
     <div class="hero" id="change">
-      <h1>Change Detection Analysis</h1>
-      <p>
-        Compare land-cover classifications between two years to detect environmental transitions
-        such as deforestation, urbanization, or water-body shifts.
-      </p>
-      <div class="btn-row">
-        <button>Compare Years</button>
-      </div>
+        <h1>Change Detection</h1>
+        <p>Compare two distinct years of satellite classification maps to detect key environmental changes such as deforestation, flooding, or desert expansion.</p>
+        <div><button class="btn">Compare Years</button></div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -176,22 +179,13 @@ elif page == "Change Detection":
     """)
 
 # ---- ABOUT ----
-elif page == "About":
+elif choice == "About":
     st.markdown("""
     <div class="hero" id="about">
-      <h1>About Climate Vision</h1>
-      <p>
-        This demo mirrors the aesthetics of Dynamic World by Google & WRI, created for
-        educational purposes. Built entirely with Streamlit, CSS styling, and static imagery.
-      </p>
+        <h1>About This Dashboard</h1>
+        <p>This dashboard is inspired by Dynamic World by Google & WRI. It showcases the use of
+        AI and remote sensing to visualize environmental changes in a clean, modern interface.</p>
+        <div><button class="btn">Learn More</button></div>
     </div>
     """, unsafe_allow_html=True)
-
-    st.markdown("""
-    **Credits**
-    - Imagery: Sentinel-2, Dynamic World examples  
-    - Design Inspiration: Dynamic World  
-    - Framework: Streamlit ( Python )  
-    - Developer: Khawla Al Neyadi  
-    """)
 
